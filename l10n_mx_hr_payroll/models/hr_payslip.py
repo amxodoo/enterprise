@@ -286,14 +286,18 @@ class HrPayslip(models.Model):
         full_days = 7  # self.imss_dias
         worked_days = full_days
         days_left = full_days
+        company = self.env.user.company_id.id
 
-        param_config = self.env["ir.config_parameter"]
-
-        if param_config.sudo().get_param("l10n_mx_hr_payroll.hr_payroll_uma_l10n_mx"):
-            uma_id = param_config.sudo().get_param(
-                "l10n_mx_hr_payroll.hr_payroll_uma_l10n_mx"
+        uma_id = (
+            self.env["hr.payroll.uma"]
+            .search(
+                [("company_id", "=", company)],
+                limit=1,
             )
-            uma = self.env["hr.payroll.uma"].browse(int(uma_id)).daily
+            .id
+        )
+
+        uma = self.env["hr.payroll.uma"].browse(int(uma_id)).daily
 
         if self.employee_id.employer_register.company_zone_l10n_mx == "z1":
             _logger.info("UMA   -->>  " + str(uma) + "  " + str(self.id))
