@@ -2,6 +2,7 @@
     <record id="res_partner_inherit_hr_payroll_mx_view_form" model="ir.ui.view">
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="priority">100</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='vat']" position='replace'>
                 <field name="vat" placeholder="RFC number" string="RFC" />
