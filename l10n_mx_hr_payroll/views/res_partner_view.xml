@@ -1,11 +1,11 @@
 <odoo>
     <record id="res_partner_inherit_hr_payroll_mx_view_form" model="ir.ui.view">
         <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.res_partner_view_form_private" />
+        <field name="inherit_id" ref="base.view_partner_form" />
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='phone']" position='before'>
+            <xpath expr="//field[@name='vat']" position='replace'>
                 <field name="vat" placeholder="RFC number" string="RFC" />
-                <field name="curp" />
+                <field name="curp" placeholder="CURP number" string="CURP" />
             </xpath>
         </field>
     </record>

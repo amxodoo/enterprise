@@ -25,8 +25,8 @@ class HrPayrollSUAReports(models.Model):
             ("02", "Deregistration"),
             ("07", "Salary Modification"),
             ("08", "Reinstatement"),
-            ("11", "Absenteeism"),
-            ("12", "Incapacity"),
+            # ("11", "Absenteeism"),
+            # ("12", "Incapacity"),
         ],
         default="02",
         string="Movement Type",
@@ -276,41 +276,45 @@ class HrPayrollSUAReports(models.Model):
         for sua in self:
             if sua.report_type == "alta":
                 for line in self.line_ids:
-                    len_name = (
-                        len(str(line.name.lastname))
-                        + len(str(line.name.second_lastname))
-                        + len(str(line.name.firstname))
-                    )
-                    data = [""] * 14
+
+                    data = [""] * 19
                     data[0] = line.name.employer_register.name
-                    data[1] = line.name.ssnid.zfill(11)
-                    data[2] = str(line.name.address_home_id.vat).upper()
-                    data[3] = str(line.name.address_home_id.curp).upper()
-                    data[4] = (
-                        str(line.name.lastname).upper()
-                        + "$"
-                        + str(line.name.second_lastname).upper()
-                        + "$"
-                        + str(line.name.firstname).upper()
-                        + (" " * (48 - len_name))
-                    )
-                    data[5] = "1"
-                    data[6] = "0"
-                    data[7] = (
+                    data[1] = line.name.ssnid
+                    data[2] = line.name.lastname.ljust(27)
+                    data[3] = line.name.second_lastname.ljust(27)
+                    data[4] = line.name.firstname.ljust(27)
+                    data[5] = str(int(line.contract_id.sdi * 100)).zfill(6)
+                    data[6] = " " * 6
+                    if line.contract_id.contract_type in ("01", "02", "03"):
+                        data[7] = "1"
+                    elif line.contract_id.contract_type in ("04", "05", "06"):
+                        data[7] = "2"
+                    elif line.contract_id.contract_type in ("07", "08", "09"):
+                        data[7] = "3"
+                    else:
+                        data[7] = "4"
+                    if line.contract_id.salary_type == "01":
+                        data[8] = "0"
+                    elif line.contract_id.salary_type == "02":
+                        data[8] = "2"
+                    else:
+                        data[8] = "1"
+                    data[9] = str(line.contract_id.journal_type[-1])
+                    data[10] = (
                         str(line.contract_id.date_start.strftime("%d"))
                         + str(line.contract_id.date_start.strftime("%m"))
                         + str(line.contract_id.date_start.strftime("%Y"))
                     )
-                    data[8] = (
-                        format(line.name.contract_id.sdi, ".2f")
-                        .replace(".", "")
-                        .zfill(7)
-                    )
-                    data[9] = line.name.employee_number.zfill(17)
-                    data[10] = " " * 10
-                    data[11] = "0" * 8
-                    data[12] = "0"
-                    data[13] = "0" * 8
+                    data[11] = str(line.name.umf).zfill(3)  # Clinica de adscricion
+                    data[12] = " " * 2
+                    data[13] = "08"
+                    data[14] = str(line.subdelegacion).zfill(
+                        5
+                    )  # Numero asignado por la subdelegacion
+                    data[15] = str(line.name.employee_number).zfill(10)
+                    data[16] = " "
+                    data[17] = str(line.name.address_home_id.curp).upper()
+                    data[18] = "9"
 
                     lines += "".join(str(d) for d in data) + "\n"
 
@@ -324,18 +328,27 @@ class HrPayrollSUAReports(models.Model):
             elif sua.report_type == "movt":
                 if sua.movt_type == "02":
                     for line in self.line_ids:
-                        data = [""] * 7
+                        data = [""] * 14
                         data[0] = line.name.employer_register.name
-                        data[1] = line.name.ssnid.zfill(11)
-                        data[2] = "02"
-                        data[3] = (
-                            str(line.contract_id.date_end)[-2:]
-                            + str(line.contract_id.date_end)[5:7]
-                            + str(line.contract_id.date_end)[:4]
+                        data[1] = line.name.ssnid
+                        data[2] = line.name.lastname.ljust(27)
+                        data[3] = line.name.second_lastname.ljust(27)
+                        data[4] = line.name.firstname.ljust(27)
+                        data[5] = "0" * 15
+                        data[6] = (
+                            str(line.date.strftime("%d"))
+                            + str(line.date.strftime("%m"))
+                            + str(line.date.strftime("%Y"))
                         )
-                        data[4] = " " * 8
-                        data[5] = " " * 2
-                        data[6] = " " * 7
+                        data[7] = " " * 5
+                        data[8] = "02"
+                        data[9] = str(line.subdelegacion).zfill(
+                            5
+                        )  # Numero asignado por la subdelegacion
+                        data[10] = str(line.name.employee_number).zfill(10)
+                        data[11] = line.baja
+                        data[12] = str(line.name.address_home_id.curp).upper()
+                        data[13] = "9"
 
                         lines += "".join(str(d) for d in data) + "\n"
 
@@ -348,27 +361,35 @@ class HrPayrollSUAReports(models.Model):
                     }
                 if sua.movt_type == "07":
                     for line in self.line_ids:
-                        date = sorted(
-                            line.name.contract_id.salary_history_ids,
-                            key=lambda x: x.date_applied,
-                            reverse=True,
-                        )[0]
-                        data = [""] * 7
+                        data = [""] * 17
                         data[0] = line.name.employer_register.name
-                        data[1] = line.name.ssnid.zfill(11)
-                        data[2] = "07"
-                        data[3] = (
-                            str(date.date_applied)[-2:]
-                            + str(date.date_applied)[5:7]
-                            + str(date.date_applied)[:4]
+                        data[1] = line.name.ssnid
+                        data[2] = line.name.lastname.ljust(27)
+                        data[3] = line.name.second_lastname.ljust(27)
+                        data[4] = line.name.firstname.ljust(27)
+                        data[5] = str(int(line.contract_id.sdi * 100)).zfill(6)
+                        data[6] = " " * 7
+                        if line.contract_id.salary_type == "01":
+                            data[7] = "0"
+                        elif line.contract_id.salary_type == "02":
+                            data[7] = "2"
+                        else:
+                            data[7] = "1"
+                        data[8] = str(line.contract_id.journal_type[-1])
+                        data[9] = (
+                            str(line.date.strftime("%d"))
+                            + str(line.date.strftime("%m"))
+                            + str(line.date.strftime("%Y"))
                         )
-                        data[4] = " " * 8
-                        data[5] = " " * 2
-                        data[6] = (
-                            format(line.name.contract_id.sdi, ".2f")
-                            .replace(".", "")
-                            .zfill(7)
-                        )
+                        data[10] = " " * 5
+                        data[11] = "07"
+                        data[12] = str(line.subdelegacion).zfill(
+                            5
+                        )  # Numero asignado por la subdelegacion
+                        data[13] = str(line.name.employee_number).zfill(10)
+                        data[14] = " "
+                        data[15] = str(line.name.address_home_id.curp).upper()
+                        data[16] = "9"
 
                         lines += "".join(str(d) for d in data) + "\n"
 
@@ -381,23 +402,45 @@ class HrPayrollSUAReports(models.Model):
                     }
                 if sua.movt_type == "08":
                     for line in self.line_ids:
-                        data = [""] * 7
-                        data = [""] * 7
+
+                        data = [""] * 19
                         data[0] = line.name.employer_register.name
-                        data[1] = line.name.ssnid.zfill(11)
-                        data[2] = "08"
-                        data[3] = (
+                        data[1] = line.name.ssnid
+                        data[2] = line.name.lastname.ljust(27)
+                        data[3] = line.name.second_lastname.ljust(27)
+                        data[4] = line.name.firstname.ljust(27)
+                        data[5] = str(int(line.contract_id.sdi * 100)).zfill(6)
+                        data[6] = " " * 6
+                        if line.contract_id.contract_type in ("01", "02", "03"):
+                            data[7] = "1"
+                        elif line.contract_id.contract_type in ("04", "05", "06"):
+                            data[7] = "2"
+                        elif line.contract_id.contract_type in ("07", "08", "09"):
+                            data[7] = "3"
+                        else:
+                            data[7] = "4"
+                        if line.contract_id.salary_type == "01":
+                            data[8] = "0"
+                        elif line.contract_id.salary_type == "02":
+                            data[8] = "2"
+                        else:
+                            data[8] = "1"
+                        data[9] = str(line.contract_id.journal_type[-1])
+                        data[10] = (
                             str(line.contract_id.date_start.strftime("%d"))
                             + str(line.contract_id.date_start.strftime("%m"))
                             + str(line.contract_id.date_start.strftime("%Y"))
                         )
-                        data[4] = " " * 8
-                        data[5] = " " * 2
-                        data[6] = (
-                            format(line.name.contract_id.sdi, ".2f")
-                            .replace(".", "")
-                            .zfill(7)
-                        )
+                        data[11] = str(line.name.umf).zfill(3)  # Clinica de adscricion
+                        data[12] = " " * 2
+                        data[13] = "08"
+                        data[14] = str(line.subdelegacion).zfill(
+                            5
+                        )  # Numero asignado por la subdelegacion
+                        data[15] = str(line.name.employee_number).zfill(10)
+                        data[16] = " "
+                        data[17] = str(line.name.address_home_id.curp).upper()
+                        data[18] = "9"
 
                         lines += "".join(str(d) for d in data) + "\n"
 
@@ -449,9 +492,10 @@ class HrPayrollSUAReportsLine(models.Model):
     name = fields.Many2one("hr.employee")
     date = fields.Date()
     contract_id = fields.Many2one("hr.contract")
-    ssnid = fields.Char(string="NSS")
-    amount = fields.Float()
-    timeoff_id = fields.Many2one("hr.leave")
+    # ssnid = fields.Char(string="NSS")
+    # amount = fields.Float()
+    # timeoff_id = fields.Many2one("hr.leave")
+    """
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -460,4 +504,22 @@ class HrPayrollSUAReportsLine(models.Model):
         ],
         default="draft",
     )
+    """
+    subdelegacion = fields.Integer()
+    baja = fields.Selection(
+        [
+            ("1", "Termino de contrato"),
+            ("2", "Separacion voluntaria"),
+            ("3", "Abandono de empleo"),
+            ("4", "Defuncion"),
+            ("5", "Clausura"),
+            ("6", "Otras"),
+            ("7", "Ausentismo"),
+            ("8", "Recension de contrato"),
+            ("9", "Pension"),
+        ],
+        default="1",
+        string="Razon de baja",
+    )
+
     company_id = fields.Many2one("res.company")
