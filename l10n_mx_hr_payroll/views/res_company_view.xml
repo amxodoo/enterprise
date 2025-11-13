@@ -22,6 +22,9 @@
                     </field>
                 </page>
             </xpath>
+            <field name="company_registry" position="after">
+                <field name="guia_subdelegacion" />
+            </field>
         </field>
     </record>
 

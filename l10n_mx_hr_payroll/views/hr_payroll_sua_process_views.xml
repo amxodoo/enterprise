@@ -155,8 +155,6 @@
                 <field name="name" />
                 <field name="contract_id" />
                 <field name="baja" />
-                <field name="subdelegacion" />
-                <field name="company_id" groups="base.group_multi_company" />
             </tree>
         </field>
     </record>

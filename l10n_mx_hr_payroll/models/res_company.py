@@ -7,6 +7,7 @@ from lxml import etree, objectify
 from werkzeug.urls import url_quote
 
 from odoo import SUPERUSER_ID, api, fields, models, tools
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -24,6 +25,22 @@ class ResCompany(models.Model):
     hr_payroll_settlement_structure_l10n_mx = fields.Many2one(
         "hr.payroll.structure", string="Structure"
     )
+
+    guia_subdelegacion = fields.Integer(
+        string="Guia Subdelegación", help="Entrar el numero de 5 digitos"
+    )
+
+    @api.constrains("guia_subdelegacion")
+    def _check_five_digit_number(self):
+        for record in self:
+            if record.guia_subdelegacion:
+                if (
+                    record.guia_subdelegacion < 10000
+                    or record.guia_subdelegacion > 99999
+                ):
+                    raise ValidationError(
+                        _("The number for Guia Subdelegación must be 5 digits.")
+                    )
 
     @api.model
     def _load_xsd_attachments_for_payroll(self):

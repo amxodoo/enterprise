@@ -88,6 +88,20 @@ class HrPayrollSUAReports(models.Model):
             sua.message_post(body=_("Payroll SUA Report has been Cancelled"))
             return True
 
+    def _create_contract_lines(self, sua, contract_ids):
+        sua.line_ids.unlink()
+        for contract_id in contract_ids:
+            self.env["hr.payroll.sua.reports.line"].create(
+                {
+                    "line_id": sua.id,
+                    "date": fields.Date.context_today(self),
+                    "name": contract_id.employee_id.id,
+                    "contract_id": contract_id.id,
+                    "ssnid": contract_id.employee_id.ssnid,
+                    "company_id": sua.company_id.id,
+                }
+            )
+
     def sua_calculate(self):
         for sua in self:
             sua.state = "calculated"
@@ -106,18 +120,7 @@ class HrPayrollSUAReports(models.Model):
                         ("company_id", "=", sua.company_id.id),
                     ]
                 )
-                sua.line_ids.unlink()
-                for contract_id in contract_ids:
-                    line = self.env["hr.payroll.sua.reports.line"].create(
-                        {
-                            "line_id": sua.id,
-                            "date": fields.Date.context_today(self),
-                            "name": contract_id.employee_id.id,
-                            "contract_id": contract_id.id,
-                            "ssnid": contract_id.employee_id.ssnid,
-                            "company_id": sua.company_id.id,
-                        }
-                    )
+                self._create_contract_lines(sua, contract_ids)
             elif sua.report_type == "movt":
                 self.movements(sua)
             else:
@@ -191,19 +194,8 @@ class HrPayrollSUAReports(models.Model):
                     ("company_id", "=", sua.company_id.id),
                 ]
             )
-            sua.line_ids.unlink()
             if contract_ids and contract_olders_ids:
-                for contract_id in contract_ids:
-                    self.env["hr.payroll.sua.reports.line"].create(
-                        {
-                            "line_id": sua.id,
-                            "date": fields.Date.context_today(self),
-                            "name": contract_id.employee_id.id,
-                            "contract_id": contract_id.id,
-                            "ssnid": contract_id.employee_id.ssnid,
-                            "company_id": sua.company_id.id,
-                        }
-                    )
+                self._create_contract_lines(sua, contract_ids)
         if sua.movt_type == "11":
             sua.name = "SUA Report - Absenteeism"
             timeoff_ids = self.env["hr.leave"].search(
@@ -285,11 +277,11 @@ class HrPayrollSUAReports(models.Model):
                     data[4] = line.name.firstname.ljust(27)
                     data[5] = str(int(line.contract_id.sdi * 100)).zfill(6)
                     data[6] = " " * 6
-                    if line.contract_id.contract_type in ("01", "02", "03"):
+                    if line.contract_id.contract_type in ("01", "05", "06", "07", "08"):
                         data[7] = "1"
-                    elif line.contract_id.contract_type in ("04", "05", "06"):
+                    elif line.contract_id.contract_type in ("03", "04"):
                         data[7] = "2"
-                    elif line.contract_id.contract_type in ("07", "08", "09"):
+                    elif line.contract_id.contract_type == "02":
                         data[7] = "3"
                     else:
                         data[7] = "4"
@@ -308,9 +300,7 @@ class HrPayrollSUAReports(models.Model):
                     data[11] = str(line.name.umf).zfill(3)  # Clinica de adscricion
                     data[12] = " " * 2
                     data[13] = "08"
-                    data[14] = str(line.subdelegacion).zfill(
-                        5
-                    )  # Numero asignado por la subdelegacion
+                    data[14] = str(line.name.company_id.guia_subdelegacion)
                     data[15] = str(line.name.employee_number).zfill(10)
                     data[16] = " "
                     data[17] = str(line.name.address_home_id.curp).upper()
@@ -342,12 +332,10 @@ class HrPayrollSUAReports(models.Model):
                         )
                         data[7] = " " * 5
                         data[8] = "02"
-                        data[9] = str(line.subdelegacion).zfill(
-                            5
-                        )  # Numero asignado por la subdelegacion
+                        data[9] = str(line.name.company_id.guia_subdelegacion)
                         data[10] = str(line.name.employee_number).zfill(10)
                         data[11] = line.baja
-                        data[12] = str(line.name.address_home_id.curp).upper()
+                        data[12] = " " * 18
                         data[13] = "9"
 
                         lines += "".join(str(d) for d in data) + "\n"
@@ -383,9 +371,7 @@ class HrPayrollSUAReports(models.Model):
                         )
                         data[10] = " " * 5
                         data[11] = "07"
-                        data[12] = str(line.subdelegacion).zfill(
-                            5
-                        )  # Numero asignado por la subdelegacion
+                        data[12] = str(line.name.company_id.guia_subdelegacion)
                         data[13] = str(line.name.employee_number).zfill(10)
                         data[14] = " "
                         data[15] = str(line.name.address_home_id.curp).upper()
@@ -411,11 +397,17 @@ class HrPayrollSUAReports(models.Model):
                         data[4] = line.name.firstname.ljust(27)
                         data[5] = str(int(line.contract_id.sdi * 100)).zfill(6)
                         data[6] = " " * 6
-                        if line.contract_id.contract_type in ("01", "02", "03"):
+                        if line.contract_id.contract_type in (
+                            "01",
+                            "05",
+                            "06",
+                            "07",
+                            "08",
+                        ):
                             data[7] = "1"
-                        elif line.contract_id.contract_type in ("04", "05", "06"):
+                        elif line.contract_id.contract_type in ("03", "04"):
                             data[7] = "2"
-                        elif line.contract_id.contract_type in ("07", "08", "09"):
+                        elif line.contract_id.contract_type == "02":
                             data[7] = "3"
                         else:
                             data[7] = "4"
@@ -434,9 +426,7 @@ class HrPayrollSUAReports(models.Model):
                         data[11] = str(line.name.umf).zfill(3)  # Clinica de adscricion
                         data[12] = " " * 2
                         data[13] = "08"
-                        data[14] = str(line.subdelegacion).zfill(
-                            5
-                        )  # Numero asignado por la subdelegacion
+                        data[14] = str(line.name.company_id.guia_subdelegacion)
                         data[15] = str(line.name.employee_number).zfill(10)
                         data[16] = " "
                         data[17] = str(line.name.address_home_id.curp).upper()
@@ -505,7 +495,6 @@ class HrPayrollSUAReportsLine(models.Model):
         default="draft",
     )
     """
-    subdelegacion = fields.Integer()
     baja = fields.Selection(
         [
             ("1", "Termino de contrato"),
@@ -521,5 +510,3 @@ class HrPayrollSUAReportsLine(models.Model):
         default="1",
         string="Razon de baja",
     )
-
-    company_id = fields.Many2one("res.company")
