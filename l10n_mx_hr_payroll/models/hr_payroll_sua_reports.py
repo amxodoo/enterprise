@@ -227,7 +227,7 @@ class HrPayrollSUAReports(models.Model):
             elif sua.report_type == "movt" and sua.movt_type == "08":
                 file_name = "reingreso.txt"
 
-            for line in self.line_ids:
+            for line in sua.line_ids:
                 contract = line.contract_id
                 employee = line.name
 
@@ -514,7 +514,7 @@ class HrPayrollSUAReports(models.Model):
         """Generate Affiliation TXT file for IMSS registration"""
         lines = ""
         for sua in self:
-            for line in self.line_ids:
+            for line in sua.line_ids:
                 contract = line.contract_id
                 employee = line.name
 
