@@ -7,59 +7,36 @@
             <form string="Payroll SUA Reports">
                 <header>
                     <button
-                        string="Done"
-                        name="sua_done"
-                        class="oe_highlight"
-                        states="calculated"
-                        type='object'
-                    />
-                    <button
                         string="Cancel"
                         name="sua_cancel"
-                        states="done,calculated"
-                        type='object'
+                        states="calculated"
+                        type="object"
                     />
                     <button
                         string="Calculate"
                         name="sua_calculate"
                         class="oe_highlight"
-                        states="draft,calculated"
-                        type='object'
+                        states="draft"
+                        type="object"
                     />
                     <button
-                        string="SUA ( txt)"
+                        string="SUA (txt)"
                         name="sua_txt"
                         class="oe_highlight"
-                        states="done,calculated"
-                        type='object'
+                        states="calculated"
+                        type="object"
                     />
                     <button
-                        string="Back to Draft"
-                        name="sua_back_to_draft"
+                        string="Affiliation TXT"
+                        name="affiliation_txt"
                         class="oe_highlight"
-                        states="done"
-                        type='object'
+                        states="calculated"
+                        type="object"
+                        attrs="{'invisible': [('report_type', '!=', 'alta')]}"
                     />
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button
-                            name="action_open_payroll_movs_sua"
-                            class="oe_stat_button"
-                            icon="fa-book"
-                            type="object"
-                            help="Sua movements"
-                            attrs="{'invisible': [('movs_count', '=', 0)]}"
-                        >
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value"><field
-                                        name="movs_count"
-                                    /></span>
-                                <span class="o_stat_text">Movements</span>
-                            </div>
-                        </button>
-                    </div>
                     <div class="oe_title">
                         <label for="name" class="oe_edit_only" />
                         <h1><field name="name" /></h1>
@@ -75,21 +52,11 @@
                         <group>
                             <label for="date_start" string="Period" />
                             <span>
-                                <field
-                                    name="date_start"
-                                    class="oe_inline"
-                                    attrs="{'readonly':[('state','=','done')]}"
-                                /> - <field
+                                <field name="date_start" class="oe_inline" /> - <field
                                     name="date_end"
                                     class="oe_inline"
-                                    attrs="{'readonly':[('state','=','done')]}"
                                 />
                             </span>
-                            <field
-                                name="company_id"
-                                groups="base.group_multi_company"
-                                attrs="{'readonly':[('state','!=','draft')]}"
-                            />
                         </group>
                     </group>
                     <notebook>
@@ -101,13 +68,6 @@
 
                                 </tree>
                             </field>
-                        </page>
-                        <page string="Notes">
-                            <field
-                                name="notes"
-                                nolabel="1"
-                                attrs="{'readonly':[('state','!=','draft')]}"
-                            />
                         </page>
                     </notebook>
                 </sheet>
@@ -150,11 +110,10 @@
         <field name="name">hr.payroll.sua.reports.line.tree</field>
         <field name="model">hr.payroll.sua.reports.line</field>
         <field name="arch" type="xml">
-            <tree sample="1">
+            <tree>
                 <field name="date" />
                 <field name="name" />
-                <field name="contract_id" />
-                <field name="baja" />
+                <field name="ssnid" />
             </tree>
         </field>
     </record>

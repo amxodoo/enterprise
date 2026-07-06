@@ -6118,3 +6118,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_mx_hr_payroll.field_hr_payroll_sua_reports__txt_file
 msgid "txt file"
 msgstr "Archivo txt"
+
+#. module: l10n_mx_hr_payroll
+#: model:ir.model.fields,field_description:l10n_mx_hr_payroll.field_hr_payroll_sua_reports__affiliation_file
+msgid "Affiliation txt file"
+msgstr "Archivo txt de Afiliación"
