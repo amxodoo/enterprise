@@ -1,15 +1,20 @@
 # Copyright (C) 2026 Gray Matter Logic (<https://www.graymatterlogic.com>).
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
-from odoo.addons.base.tests.common import BaseCommon
+from odoo.tests import tagged
+
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
 
-class TestAddendaAudi(BaseCommon):
+@tagged("post_install", "-at_install")
+class TestAddendaAudi(AccountTestInvoicingCommon):
     @classmethod
+    @AccountTestInvoicingCommon.setup_country("mx")
     def setUpClass(cls):
         super().setUpClass()
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
         cls.addenda = cls.env.ref("l10n_mx_edi_addenda_audi.l10n_mx_edi_addenda_audi")
+        cls.sale_journal = cls.company_data["default_journal_sale"]
 
     def test_addenda_record_loaded(self):
         self.assertEqual(self.addenda.name, "Addenda Audi")
@@ -28,6 +33,7 @@ class TestAddendaAudi(BaseCommon):
             {
                 "move_type": "out_invoice",
                 "partner_id": partner.id,
+                "journal_id": self.sale_journal.id,
             }
         )
         self.assertTrue(move.audi_flag)
@@ -39,6 +45,7 @@ class TestAddendaAudi(BaseCommon):
             {
                 "move_type": "out_invoice",
                 "partner_id": partner.id,
+                "journal_id": self.sale_journal.id,
             }
         )
         self.assertFalse(move.audi_flag)
