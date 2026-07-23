@@ -6,7 +6,6 @@
         <field name="inherit_id" ref="base.view_partner_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='category_id']" position="after">
-                <field name="mabe_addenda_selected" invisible="1" />
                 <field
                     name="mabe_plant_code"
                     string="Mabe Plant Code"

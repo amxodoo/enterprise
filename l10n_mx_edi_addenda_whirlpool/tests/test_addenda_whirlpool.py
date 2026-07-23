@@ -1,9 +1,12 @@
 # Copyright (C) 2026 Gray Matter Logic (<https://www.graymatterlogic.com>).
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
+from odoo.tests import tagged
+
 from odoo.addons.base.tests.common import BaseCommon
 
 
+@tagged("post_install", "-at_install")
 class TestAddendaWhirlpool(BaseCommon):
     @classmethod
     def setUpClass(cls):
