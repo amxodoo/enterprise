@@ -16,6 +16,7 @@
         "views/account_move_views.xml",
         "views/l10n_mx_addenda_kuehne_nagel_view.xml",
     ],
+    "installable": True,
     "application": False,
     "maintainers": ["max3903"],
 }

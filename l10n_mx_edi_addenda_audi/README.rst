@@ -102,6 +102,14 @@ The development of this module has been financially supported by:
 Maintainers
 -----------
 
+.. |maintainer-max3903| image:: https://github.com/max3903.png?size=40px
+    :target: https://github.com/max3903
+    :alt: max3903
+
+Current maintainer:
+
+|maintainer-max3903| 
+
 This module is part of the `amxodoo/enterprise <https://github.com/amxodoo/enterprise/tree/17.0/l10n_mx_edi_addenda_audi>`_ project on GitHub.
 
 You are welcome to contribute.

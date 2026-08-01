@@ -15,4 +15,5 @@
         "views/res_partner_views.xml",
     ],
     "application": False,
+    "maintainers": ["max3903"],
 }

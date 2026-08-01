@@ -15,5 +15,5 @@
         "views/res_partner_views.xml",
     ],
     "application": False,
-    "maintainers": ["ursais"],
+    "maintainers": ["max3903"],
 }

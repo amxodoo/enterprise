@@ -14,5 +14,5 @@
     ],
     "data": ["views/account_move_views.xml", "views/l10n_mx_addenda_ford_view.xml"],
     "application": False,
-    "maintainers": ["ursais"],
+    "maintainers": ["max3903"],
 }

@@ -11,5 +11,5 @@
     "depends": ["account", "l10n_mx_edi"],
     "data": ["views/l10n_mx_addenda_whirlpool.xml"],
     "application": False,
-    "maintainers": ["ursais"],
+    "maintainers": ["max3903"],
 }
