@@ -17,5 +17,5 @@
         "views/l10n_mx_addenda_kuehne_nagel_view.xml",
     ],
     "application": False,
-    "maintainers": ["ursais"],
+    "maintainers": ["max3903"],
 }
