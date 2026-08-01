@@ -28,12 +28,18 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - name: Install whool
+        run: pip install whool
+      - name: Generate missing pyproject.toml
+        # Same as the pre-commit hook `whool-init`: create addon pyproject.toml
+        # so publish works even when a new module was merged without one.
+        run: whool init
       - name: Detect addons to publish
         id: detect
         env:
@@ -46,6 +52,7 @@ jobs:
 
           is_addon() {
             local dir="$1"
+            # whool init above ensures pyproject.toml exists for installable addons
             [ -f "${dir}/__manifest__.py" ] && [ -f "${dir}/pyproject.toml" ]
           }
 
@@ -107,7 +114,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
       - name: Install build tools
         if: steps.detect.outputs.has_addons == 'true'
-        run: pip install build twine whool
+        run: pip install build twine
       - name: Build wheels for changed addons
         if: steps.detect.outputs.has_addons == 'true'
         env:
