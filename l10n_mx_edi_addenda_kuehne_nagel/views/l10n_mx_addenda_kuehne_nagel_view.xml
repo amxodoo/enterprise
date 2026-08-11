@@ -5,9 +5,9 @@
             <kn:Tipo>
                 <kn:FacturasKN>
                     <kn:Purchase_Order t-out="record.ref or None" />
-                    <kn:FileNumber_GL t-out="record.kn_file_number_gl" />
-                    <kn:Branch_Centre t-out="record.kn_branch_centre" />
-                    <kn:TransportRef t-out="record.kn_transport_ref" />
+                    <kn:FileNumber_GL t-out="record.kn_file_number_gl or None" />
+                    <kn:Branch_Centre t-out="record.kn_branch_centre or None" />
+                    <kn:TransportRef t-out="record.kn_transport_ref or None" />
                 </kn:FacturasKN>
             </kn:Tipo>
         </kn:KNRECEPCION>
