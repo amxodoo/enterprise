@@ -13,22 +13,13 @@
                     invisible="not kn_flag"
                 >
                     <group>
-                        <field
-                            name="kn_file_type"
-                            string="File / Tracking Type"
-                        />
+                        <field name="kn_file_type" string="File / Tracking Type" />
                         <field
                             name="kn_file_number_gl"
                             string="File / Tracking Number"
                         />
-                        <field
-                            name="kn_branch_centre"
-                            string="Branch Centre"
-                        />
-                        <field
-                            name="kn_transport_ref"
-                            string="Transport Ref"
-                        />
+                        <field name="kn_branch_centre" string="Branch Centre" />
+                        <field name="kn_transport_ref" string="Transport Ref" />
                     </group>
                     <group string="Hints">
                         <div colspan="2">
