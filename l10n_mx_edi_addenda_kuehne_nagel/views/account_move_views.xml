@@ -13,35 +13,21 @@
                     invisible="not kn_flag"
                 >
                     <group>
-                        <field
-                            name="kn_file_type"
-                            string="File / Tracking Type"
-                            required="kn_flag"
-                        />
+                        <field name="kn_file_type" string="File / Tracking Type" />
                         <field
                             name="kn_file_number_gl"
                             string="File / Tracking Number"
-                            required="kn_flag"
                         />
-                        <field
-                            name="kn_branch_centre"
-                            string="Branch Centre"
-                            required="kn_flag"
-                        />
-                        <field
-                            name="kn_transport_ref"
-                            string="Transport Ref"
-                            required="kn_flag"
-                        />
+                        <field name="kn_branch_centre" string="Branch Centre" />
+                        <field name="kn_transport_ref" string="Transport Ref" />
                     </group>
                     <group string="Hints">
                         <div colspan="2">
                             <p>
-                                Purchase Order uses the Customer Reference field
-                                (empty when not applicable, or PO + 4 letters + 9 digits).
+                                Purchase Order uses the Customer Reference field as entered.
                             </p>
                             <p>
-                                File Number: 73 + 14 digits. Tracking Number: ##########-####.
+                                Addenda fields are optional and do not enforce a format.
                             </p>
                         </div>
                     </group>

@@ -3,7 +3,6 @@
 
 from lxml import etree
 
-from odoo.exceptions import ValidationError
 from odoo.tests import tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
@@ -62,41 +61,31 @@ class TestKnAddenda(AccountTestInvoicingCommon):
         )
         self.assertEqual(invoice.kn_branch_centre, "10DWT")
 
-    def test_normalize_ref_uppercase_for_kn(self):
+    def test_ref_is_preserved_for_kn(self):
         invoice = self._create_invoice(
             self.partner_kn,
-            ref="poabcd123456789",
-            kn_file_type="file",
-            kn_file_number_gl="7310880180505405",
-            kn_branch_centre="10DWT",
-            kn_transport_ref="2886541",
+            ref="Customer PO/abc-123",
         )
-        self.assertEqual(invoice.ref, "POABCD123456789")
+        self.assertEqual(invoice.ref, "Customer PO/abc-123")
 
-    def test_invalid_purchase_order_format(self):
+    def test_any_purchase_order_format_is_allowed(self):
         invoice = self._create_invoice(self.partner_kn)
-        with self.assertRaises(ValidationError):
-            invoice.write({"ref": "INVALID-PO"})
+        invoice.write({"ref": "INVALID-PO"})
+        self.assertEqual(invoice.ref, "INVALID-PO")
 
-    def test_invalid_file_number_format(self):
+    def test_arbitrary_kn_field_formats_are_allowed(self):
         invoice = self._create_invoice(self.partner_kn)
-        with self.assertRaises(ValidationError):
-            invoice.write(
-                {
-                    "kn_file_type": "file",
-                    "kn_file_number_gl": "12345",
-                }
-            )
-
-    def test_invalid_tracking_number_format(self):
-        invoice = self._create_invoice(self.partner_kn)
-        with self.assertRaises(ValidationError):
-            invoice.write(
-                {
-                    "kn_file_type": "tracking",
-                    "kn_file_number_gl": "10239501061815",
-                }
-            )
+        invoice.write(
+            {
+                "kn_file_type": "file",
+                "kn_file_number_gl": "12345",
+                "kn_branch_centre": "AB",
+                "kn_transport_ref": "123",
+            }
+        )
+        self.assertEqual(invoice.kn_file_number_gl, "12345")
+        self.assertEqual(invoice.kn_branch_centre, "AB")
+        self.assertEqual(invoice.kn_transport_ref, "123")
 
     def test_valid_tracking_number(self):
         invoice = self._create_invoice(
@@ -107,46 +96,6 @@ class TestKnAddenda(AccountTestInvoicingCommon):
             kn_transport_ref="2886541",
         )
         self.assertEqual(invoice.kn_file_number_gl, "1023950106-1815")
-
-    def test_invalid_branch_centre(self):
-        invoice = self._create_invoice(self.partner_kn)
-        with self.assertRaises(ValidationError):
-            invoice.write({"kn_branch_centre": "AB"})
-
-    def test_invalid_transport_ref(self):
-        invoice = self._create_invoice(self.partner_kn)
-        with self.assertRaises(ValidationError):
-            invoice.write({"kn_transport_ref": "123"})
-
-    def test_check_required_fields_on_post_helper(self):
-        invoice = self._create_invoice(self.partner_kn)
-        with self.assertRaises(ValidationError):
-            invoice._check_kn_addenda_fields()
-
-    def test_check_passes_with_complete_file_data(self):
-        invoice = self._create_invoice(
-            self.partner_kn,
-            kn_file_type="file",
-            kn_file_number_gl="7310880180505405",
-            kn_branch_centre="10DWT",
-            kn_transport_ref="2886541",
-        )
-        invoice._check_kn_addenda_fields()
-
-    def test_check_passes_with_empty_purchase_order(self):
-        invoice = self._create_invoice(
-            self.partner_kn,
-            ref=False,
-            kn_file_type="file",
-            kn_file_number_gl="7310880180505405",
-            kn_branch_centre="10DWT",
-            kn_transport_ref="2886541",
-        )
-        invoice._check_kn_addenda_fields()
-
-    def test_other_partner_skips_kn_checks(self):
-        invoice = self._create_invoice(self.partner_other, ref="anything")
-        invoice._check_kn_addenda_fields()
 
     def test_qweb_addenda_xml_structure(self):
         invoice = self._create_invoice(
@@ -185,7 +134,7 @@ class TestKnAddenda(AccountTestInvoicingCommon):
     def test_qweb_addenda_with_purchase_order(self):
         invoice = self._create_invoice(
             self.partner_kn,
-            ref="POABCD123456789",
+            ref="Customer PO/abc-123",
             kn_file_type="tracking",
             kn_file_number_gl="1023950106-1815",
             kn_branch_centre="99NFP",
@@ -199,9 +148,27 @@ class TestKnAddenda(AccountTestInvoicingCommon):
         ns = {"kn": "http://www.w3.org/2001/XMLSchema"}
         self.assertEqual(
             root.findtext(".//kn:Purchase_Order", namespaces=ns),
-            "POABCD123456789",
+            "Customer PO/abc-123",
         )
         self.assertEqual(
             root.findtext(".//kn:FileNumber_GL", namespaces=ns),
             "1023950106-1815",
         )
+
+    def test_qweb_addenda_with_empty_optional_fields(self):
+        invoice = self._create_invoice(self.partner_kn, ref=False)
+        xml = self.env["ir.qweb"]._render(
+            self.addenda.id,
+            {"record": invoice},
+        )
+        root = etree.fromstring(xml)
+        ns = {"kn": "http://www.w3.org/2001/XMLSchema"}
+        for field_name in (
+            "Purchase_Order",
+            "FileNumber_GL",
+            "Branch_Centre",
+            "TransportRef",
+        ):
+            element = root.find(f".//kn:{field_name}", namespaces=ns)
+            self.assertIsNotNone(element)
+            self.assertFalse((element.text or "").strip())
