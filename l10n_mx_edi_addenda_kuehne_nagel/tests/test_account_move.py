@@ -7,7 +7,6 @@ from odoo.tests import tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
-
 KN_NS = {"kn": "http://www.w3.org/2001/XMLSchema"}
 
 

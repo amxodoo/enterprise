@@ -23,5 +23,6 @@
     "icon": "/l10n_mx_edi_addenda_kuehne_nagel/static/description/icon.png",
     "installable": True,
     "application": False,
+    "development_status": "Beta",
     "maintainers": ["max3903"],
 }

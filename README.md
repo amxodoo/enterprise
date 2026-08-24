@@ -10,7 +10,16 @@ Enterprise modules for the Mexican localization
 
 [//]: # (addons)
 
-This part will be replaced when running the oca-gen-addons-table script from OCA/maintainer-tools.
+Available addons
+----------------
+addon | version | maintainers | summary
+--- | --- | --- | ---
+[l10n_mx_edi_addenda_audi](l10n_mx_edi_addenda_audi/) | 19.0.1.0.1 |  | Mexican Localization Addendum For Audi
+[l10n_mx_edi_addenda_ford](l10n_mx_edi_addenda_ford/) | 19.0.1.0.1 |  | Mexican Localization Addendum For Ford
+[l10n_mx_edi_addenda_kuehne_nagel](l10n_mx_edi_addenda_kuehne_nagel/) | 19.0.1.0.0 | <a href='https://github.com/max3903'><img src='https://github.com/max3903.png' width='32' height='32' style='border-radius:50%;' alt='max3903'/></a> | Mexican Localization Addendum KNRECEPCION For Kuehne+Nagel
+[l10n_mx_edi_addenda_mabe](l10n_mx_edi_addenda_mabe/) | 19.0.1.0.1 |  | Mexican Localization Addendum For MABE
+[l10n_mx_edi_addenda_volkswagen](l10n_mx_edi_addenda_volkswagen/) | 19.0.1.0.1 |  | Mexican Localization Addendum For Volkswagen
+[l10n_mx_edi_addenda_whirlpool](l10n_mx_edi_addenda_whirlpool/) | 19.0.1.0.1 |  | Mexican Localization Addendum For Whirlpool
 
 [//]: # (end addons)
 
