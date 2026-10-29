@@ -4,9 +4,9 @@
         <field name="name">Addenda Volkswagen</field>
         <field name="arch" type="xml">
             <t>
-                <t t-xml-node="addenda" xmlns:PSV="http://www.vwnovedades.com/volkswagen/kanseilab/shcp/2009/Addenda/PSV">
-                    <t t-namespace-key="PSV" t-namespace-url="http://www.vwnovedades.com/volkswagen/kanseilab/shcp/2009/Addenda/PSV"/>
+                <t t-xml-node="addenda">
                     <PSV:Factura
+                        xmlns:PSV="http://www.vwnovedades.com/volkswagen/kanseilab/shcp/2009/Addenda/PSV"
                         version="1.0"
                         tipoDocumentoFiscal="FA"
                         tipoDocumentoVWM="PSV"
@@ -29,7 +29,7 @@
                         <PSV:Archivo datos="[ARCHIVO]" tipo="PDF" />
                         <PSV:Partes>
                             <t t-set="i" t-value="1" />
-                            <t t-foreach="record.invoice_line_ids" t-as="move_line">
+                            <t t-foreach="record.invoice_line_ids.filtered(lambda line: line.display_type == 'product')" t-as="move_line">
                                 <PSV:Parte
                                     t-att-posicion="i"
                                     t-att-numeroMaterial="move_line.vw_product_ref"
