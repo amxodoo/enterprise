@@ -14,6 +14,13 @@ Enterprise modules for the Mexican localization
 <!-- prettier-ignore-start -->
 
 [//]: # (addons)
+
+Available addons
+----------------
+addon | version | maintainers | summary
+--- | --- | --- | ---
+[l10n_mx_edi_blacklist](l10n_mx_edi_blacklist/) | 20.0.1.0.0 | <a href='https://github.com/max3903'><img src='https://github.com/max3903.png' width='32' height='32' style='border-radius:50%;' alt='max3903'/></a> | Block CFDI stamping when the customer is on the SAT 69-B blacklist
+
 [//]: # (end addons)
 
 <!-- prettier-ignore-end -->
