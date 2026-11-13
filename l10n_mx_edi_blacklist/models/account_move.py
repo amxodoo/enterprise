@@ -2,8 +2,11 @@
 # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl).
 
 from odoo import models
+from odoo.exceptions import UserError
+from odoo.modules.module import current_test
+from odoo.tools import config
 
-from .sat_69b import (
+from odoo.addons.l10n_mx_sat_69b.models.sat_69b import (
     BLOCKED_STATUSES,
     GENERIC_RFCS,
     SatListError,
@@ -18,12 +21,12 @@ class AccountMove(models.Model):
     def _l10n_mx_edi_cfdi_invoice_try_send(self):
         """Skip PAC signing when the customer is on the SAT 69-B blacklist."""
         self.ensure_one()
-        if (
-            self.state == "posted"
-            and self.l10n_mx_edi_cfdi_state in (False, "cancel", "global_cancel")
-            and self._l10n_mx_edi_blacklist_stop_stamp()
+        if self.state == "posted" and self.l10n_mx_edi_cfdi_state in (
+            False,
+            "cancel",
+            "global_cancel",
         ):
-            return
+            self._l10n_mx_edi_blacklist_stop_stamp()
         return super()._l10n_mx_edi_cfdi_invoice_try_send()
 
     def _l10n_mx_edi_blacklist_applies(self):
@@ -40,39 +43,54 @@ class AccountMove(models.Model):
         partner = self.partner_id.commercial_partner_id
         return normalize_rfc(partner.vat)
 
-    def _l10n_mx_edi_blacklist_notify(self, message):
-        """Leave the reason on the chatter and keep the CFDI unstamped."""
+    def _l10n_mx_edi_blacklist_record_block(self, message):
+        """Store the refusal on the chatter and as a failed CFDI document."""
         self.ensure_one()
         self.message_post(body=message)
         self._l10n_mx_edi_cfdi_invoice_document_sent_failed(message)
 
+    def _l10n_mx_edi_blacklist_notify(self, message):
+        """Show a dialog and keep the same text on the invoice.
+
+        ``UserError`` rolls back the send request. Commit first so the
+        chatter message and the failed CFDI document survive that rollback.
+        """
+        self.ensure_one()
+        self._l10n_mx_edi_blacklist_record_block(message)
+        if not config["test_enable"] and not current_test:
+            # pylint: disable=invalid-commit
+            self.env.cr.commit()
+        raise UserError(message)
+
     def _l10n_mx_edi_blacklist_stop_stamp(self):
-        """Post the SAT reference and return whether stamping must stop."""
+        """Raise when the customer is on the SAT blacklist."""
         self.ensure_one()
         if not self._l10n_mx_edi_blacklist_applies():
-            return False
+            return
         rfc = self._l10n_mx_edi_customer_rfc()
         if not rfc or rfc in GENERIC_RFCS:
-            return False
+            return
+        record = None
         try:
             record = lookup_taxpayer(rfc)
         except SatListError:
-            message = self.env._(
-                "Could not verify the SAT blacklist (article 69-B) for customer "
-                "RFC %(rfc)s. The invoice was not stamped.",
-                rfc=rfc,
+            self._l10n_mx_edi_blacklist_notify(
+                self.env._(
+                    "Could not verify the SAT blacklist (article 69-B) for customer "
+                    "RFC %(rfc)s. The invoice was not stamped.",
+                    rfc=rfc,
+                )
             )
-            self._l10n_mx_edi_blacklist_notify(message)
-            return True
         if not record or record["status"] not in BLOCKED_STATUSES:
-            return False
-        message = self.env._(
-            "Cannot stamp the invoice: %(customer)s (RFC %(rfc)s) is on the SAT "
-            "blacklist (article 69-B, status %(status)s). Reference: %(reference)s.",
-            customer=record["name"] or self.partner_id.display_name,
-            rfc=rfc,
-            status=record["status"],
-            reference=record["reference"] or self.env._("n/a"),
+            return
+        self._l10n_mx_edi_blacklist_notify(
+            self.env._(
+                "Cannot stamp the invoice: %(customer)s (RFC %(rfc)s) is on the "
+                "SAT blacklist (article 69-B, status %(status)s). "
+                "Reference: %(reference)s.",
+                customer=record["name"] or self.partner_id.display_name,
+                rfc=rfc,
+                status=record["status"],
+                reference=record["reference"] or self.env._("n/a"),
+            )
         )
-        self._l10n_mx_edi_blacklist_notify(message)
-        return True

@@ -3,11 +3,12 @@
 
 from unittest.mock import patch
 
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.l10n_mx_edi.models.account_move import AccountMove as MxAccountMove
 from odoo.addons.l10n_mx_edi.tests.common import TestMxEdiCommon
-from odoo.addons.l10n_mx_edi_blacklist.models.sat_69b import SatListError
+from odoo.addons.l10n_mx_sat_69b.models.sat_69b import SatListError
 
 
 @tagged("post_install", "-at_install")
@@ -82,31 +83,31 @@ class TestBlacklistStamp(TestMxEdiCommon):
                 return_value=record,
             ),
             self._patch_parent_send() as parent_send,
+            self.assertRaises(UserError) as error,
         ):
             invoice._l10n_mx_edi_cfdi_invoice_try_send()
         parent_send.assert_not_called()
-        chatter = self._chatter(invoice)
-        self.assertIn("500-05-2024-9 de fecha 02 de febrero de 2024", chatter)
-        self.assertIn("Definitivo", chatter)
-        self.assertIn("ICV060329BY0", chatter)
-        document = invoice.l10n_mx_edi_invoice_document_ids.filtered(
-            lambda doc: doc.state == "invoice_sent_failed"
-        )
-        self.assertTrue(document)
-        self.assertIn(record["reference"], document[-1].message)
+        message = str(error.exception)
+        self.assertIn(record["reference"], message)
+        self.assertIn("Definitivo", message)
+        self.assertIn("ICV060329BY0", message)
+        self.assertIn("ACME, S.A.", message)
         self.assertNotEqual(invoice.l10n_mx_edi_cfdi_state, "sent")
 
     def test_presunto_and_empty_name_or_reference(self):
         invoice = self._create_invoice_mx()
-        with patch(
-            "odoo.addons.l10n_mx_edi_blacklist.models.account_move.lookup_taxpayer",
-            return_value={"name": "", "status": "Presunto", "reference": ""},
+        with (
+            patch(
+                "odoo.addons.l10n_mx_edi_blacklist.models.account_move.lookup_taxpayer",
+                return_value={"name": "", "status": "Presunto", "reference": ""},
+            ),
+            self.assertRaises(UserError) as error,
         ):
-            self.assertTrue(invoice._l10n_mx_edi_blacklist_stop_stamp())
-        chatter = self._chatter(invoice)
-        self.assertIn("Presunto", chatter)
-        self.assertIn(invoice.partner_id.display_name, chatter)
-        self.assertIn("n/a", chatter)
+            invoice._l10n_mx_edi_blacklist_stop_stamp()
+        message = str(error.exception)
+        self.assertIn("n/a", message)
+        self.assertIn("Presunto", message)
+        self.assertIn(invoice.partner_id.display_name, message)
 
     def test_cleared_or_unknown_status_still_stamps(self):
         invoice = self._create_invoice_mx()
@@ -142,10 +143,11 @@ class TestBlacklistStamp(TestMxEdiCommon):
                 },
             ),
             self._patch_parent_send() as parent_send,
+            self.assertRaises(UserError) as error,
         ):
             refund._l10n_mx_edi_cfdi_invoice_try_send()
         parent_send.assert_not_called()
-        self.assertIn("500-05-REF", self._chatter(refund))
+        self.assertIn("500-05-REF", str(error.exception))
 
     def test_unavailable_list_blocks_stamp(self):
         invoice = self._create_invoice_mx()
@@ -155,10 +157,12 @@ class TestBlacklistStamp(TestMxEdiCommon):
                 side_effect=SatListError("down"),
             ),
             self._patch_parent_send() as parent_send,
+            self.assertRaises(UserError) as error,
         ):
             invoice._l10n_mx_edi_cfdi_invoice_try_send()
         parent_send.assert_not_called()
-        self.assertIn("Could not verify the SAT blacklist", self._chatter(invoice))
+        self.assertIn("Could not verify the SAT blacklist", str(error.exception))
+        self.assertIn("ICV060329BY0", str(error.exception))
 
     def test_draft_invoice_does_not_query_the_list(self):
         invoice = self._create_invoice_mx(post=False)
@@ -171,3 +175,31 @@ class TestBlacklistStamp(TestMxEdiCommon):
             invoice._l10n_mx_edi_cfdi_invoice_try_send()
         lookup.assert_not_called()
         parent_send.assert_called()
+
+    def test_notify_commits_outside_tests_before_the_dialog(self):
+        invoice = self._create_invoice_mx()
+        with (
+            patch(
+                "odoo.addons.l10n_mx_edi_blacklist.models.account_move.config",
+                {"test_enable": False},
+            ),
+            patch(
+                "odoo.addons.l10n_mx_edi_blacklist.models.account_move.current_test",
+                False,
+            ),
+            patch.object(invoice.env.cr, "commit") as commit,
+            self.assertRaises(UserError),
+        ):
+            invoice._l10n_mx_edi_blacklist_notify("Blocked")
+        commit.assert_called_once()
+
+    def test_record_block_keeps_the_reason_on_the_chatter(self):
+        invoice = self._create_invoice_mx()
+        message = "Blocked: ACME (RFC ICV060329BY0), reference 500-05-2024-9"
+        invoice._l10n_mx_edi_blacklist_record_block(message)
+        self.assertIn(message, self._chatter(invoice))
+        document = invoice.l10n_mx_edi_invoice_document_ids.filtered(
+            lambda doc: doc.state == "invoice_sent_failed"
+        )
+        self.assertTrue(document)
+        self.assertIn(message, document[-1].message)

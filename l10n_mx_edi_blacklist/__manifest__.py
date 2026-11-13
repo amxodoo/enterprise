@@ -11,7 +11,7 @@
     "license": "LGPL-3",
     "development_status": "Beta",
     "maintainers": ["max3903"],
-    "depends": ["l10n_mx_edi"],
+    "depends": ["l10n_mx_edi", "l10n_mx_sat_69b"],
     "installable": True,
     "application": False,
 }
